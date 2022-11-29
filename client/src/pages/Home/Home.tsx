@@ -1,6 +1,8 @@
 import { useQuery } from '@apollo/client'
-import { Box, Grid, Pagination, Paper, Stack, TextField } from '@mui/material'
-import { useEffect, useState } from 'react'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import { Box, Grid, IconButton, Pagination, Paper, Stack, TextField } from '@mui/material'
+import { useState } from 'react'
+import { Field, Form } from 'react-final-form'
 import { MoviesCard, MoviesCardSelected } from '../../components'
 import useMovies from '../../hooks/useMovies'
 import { IMovie } from '../../interfaces'
@@ -15,14 +17,20 @@ const Home = () => {
       pageNumber: page,
     },
   })
-  console.log('🚀 ~ file: Home.tsx ~ line 18 ~ Home ~ data', data)
+
   const { selectedMovies, selectMovie, removeMovie } = useMovies()
 
   const paginationHandler = (_: any, page: number) => {
     setPage(page)
   }
 
-  useEffect(() => {}, [selectedMovies])
+  const onSubmit = (e: { [key: string]: string }) => {
+    const ids = selectedMovies.map(({ id }) => id)
+    const link = `${window.location.host}/recommend?title=${e.listName}&ids=${ids.join()}`
+    console.log('🚀 ~ file: Home.tsx ~ line 40 ~ onSubmit ~ link', link)
+  }
+
+  const required = (value: any) => (value ? undefined : 'Required')
 
   if (loading) {
     return <h1>Loading...</h1>
@@ -83,13 +91,27 @@ const Home = () => {
             ) : (
               <EmptyList />
             )}
-            <TextField
-              id="standard-textarea"
-              label="Multiline Placeholder"
-              placeholder="Placeholder"
-              multiline
-              variant="standard"
-            />{' '}
+            <Form
+              onSubmit={onSubmit}
+              // validate={validate}
+              render={({ handleSubmit }) => (
+                <form onSubmit={handleSubmit}>
+                  <Paper sx={{ p: '2px 4px', display: 'flex', alignItems: 'center' }}>
+                    <Field name="listName" validate={required}>
+                      {({ input, meta }) => (
+                        <>
+                          <TextField fullWidth placeholder="Put the list name" {...input} />
+                          {meta.error && meta.touched && <span>{meta.error}</span>}
+                          <IconButton type="submit" sx={{ p: '10px' }}>
+                            <CheckCircleOutlineIcon />
+                          </IconButton>
+                        </>
+                      )}
+                    </Field>
+                  </Paper>
+                </form>
+              )}
+            />
           </Paper>
         </Grid>
       </Grid>
